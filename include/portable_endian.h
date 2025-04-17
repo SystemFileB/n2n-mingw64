@@ -159,6 +159,7 @@
 #       define htole64(x) (x)
 #       define le64toh(x) (x)
 
+
 #   elif BYTE_ORDER == BIG_ENDIAN
 
         /* that would be xbox 360 */
@@ -187,6 +188,7 @@
 #   define __BIG_ENDIAN    BIG_ENDIAN
 #   define __LITTLE_ENDIAN LITTLE_ENDIAN
 #   define __PDP_ENDIAN    PDP_ENDIAN
+#   include <intrin.h>
 
 #elif defined(__sun)
 

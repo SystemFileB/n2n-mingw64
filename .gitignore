@@ -2,7 +2,6 @@
 *.a
 *.gz
 *.exe
-configure
 config.log
 config.mak
 config.rpath
@@ -62,3 +61,6 @@ coverage/
 /AUTHORS
 /ChangeLog
 /NEWS
+
+# 不知道是怎么生成的，该不会是Configure脚本吧
+Do

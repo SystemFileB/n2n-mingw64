@@ -542,10 +542,13 @@ static ssize_t sendto_sock(n2n_sn_t *sss,
     ssize_t sent = 0;
     int value = 0;
 
-    // if the connection is tcp, i.e. not the regular sock...
     if((socket_fd >= 0) && (socket_fd != sss->sock)) {
+    #ifdef _WIN32
+    setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&value, sizeof(value)); 
+    #else
+    setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
+    #endif
 
-        setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
         value = 1;
 #ifdef LINUX
         setsockopt(socket_fd, IPPROTO_TCP, TCP_CORK, &value, sizeof(value));

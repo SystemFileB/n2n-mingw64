@@ -29,7 +29,7 @@ ifeq ($(OPENSSL_CFLAGS), 0)
   CFLAGS+=$(shell pkg-config --cflags-only-I openssl)
 endif
 
-WARN=-Wall
+WARN=
 CFLAGS+=$(DEBUG) $(OPTIMIZATION) $(WARN) $(OPTIONS) $(PLATOPTS)
 
 # Quick sanity check on our build environment
