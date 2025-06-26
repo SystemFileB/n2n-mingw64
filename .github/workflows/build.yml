@@ -80,9 +80,8 @@ jobs:
           set -ex
 
           autoreconf -vfi
-          cd build
 
-          ../configure \
+          ./configure \
             --prefix=/ \
             --bindir=/ \
             --sbindir=/ \
@@ -104,7 +103,6 @@ jobs:
         shell: msys2 {0}
         run: |
           set -ex
-          cd build
 
           # 创建专用打包目录
           _build_root="${PWD}"
@@ -129,13 +127,13 @@ jobs:
         with:
           name: build-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}
           path: |
-            build/n2n-*-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}.7z
+            n2n-*-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}.7z
       
       - name: 加入依赖
         if: always()
         shell: msys2 {0}
         run: |
-          cd build/pkgdir || (echo "build/pkgdir 目录不存在" && exit 1)
+          cd pkgdir || (echo "pkgdir 目录不存在" && exit 1)
           
           # 核心依赖
           cp -f ${MINGW_PREFIX}/bin/libwinpthread*.dll ./
