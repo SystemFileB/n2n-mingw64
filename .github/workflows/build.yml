@@ -59,7 +59,6 @@ jobs:
             libtool
             ${{ matrix.prefix }}-toolchain
             ${{ matrix.prefix }}-zstd
-            ${{ matrix.prefix }}-openssl
             ${{ matrix.prefix }}-miniupnpc
             ${{ matrix.prefix }}-libnatpmp
 
@@ -91,9 +90,7 @@ jobs:
             --build=${MINGW_CHOST} \
             --enable-miniupnp \
             --enable-natpmp \
-            --enable-pthread \
             --with-zstd \
-            --with-openssl \
             CFLAGS="${{ matrix.build_type.cflag }} -pipe" \
             LDFLAGS="-Wl,--strip-all,--gc-sections,-s"
 
