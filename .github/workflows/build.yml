@@ -1,0 +1,155 @@
+name: 构建
+on: 
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 */7 * *'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        msystem: ['MINGW64','MINGW32','CLANGARM64']
+        build_type:  # 新增构建类型矩阵
+          - { optimization: "O3",  cflag: "-O3" }
+          - { optimization: "O2",  cflag: "-O2" }
+          - { optimization: "Os",  cflag: "-Os" }
+        include:
+          - msystem: MINGW64
+            prefix: mingw-w64-x86_64
+            runner: windows-2022
+          - msystem: MINGW32
+            prefix: mingw-w64-i686
+            runner: windows-2022
+          - msystem: CLANGARM64
+            prefix: mingw-w64-clang-aarch64
+            runner: windows-11-arm
+    steps:
+      - name: 获取仓库文件
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 恢复MSYS2包缓存
+        uses: actions/cache@v4
+        id: restore-msys2
+        with:
+          path: |
+            C:/msys64/var/cache/pacman/pkg/
+          key: ${{ runner.os }}-msys2-pkg-${{ hashFiles('**/install-pacman-packages.sh') }}
+
+      - name: 安装MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          release: ${{ matrix.msystem == 'CLANGARM64' }}
+          update: true
+          install: >-
+            make
+            git
+            dos2unix
+            binutils
+            autoconf
+            autoconf-archive
+            automake-wrapper
+            automake
+            libtool
+            ${{ matrix.prefix }}-toolchain
+            ${{ matrix.prefix }}-zstd
+            ${{ matrix.prefix }}-openssl
+            ${{ matrix.prefix }}-libcap
+
+      - name: 保存MSYS2包缓存
+        if: steps.restore-msys2.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:/msys64/var/cache/pacman/pkg/
+          key: ${{ runner.os }}-msys2-pkg-${{ hashFiles('**/install-pacman-packages.sh') }}
+
+      - name: 编译
+        shell: msys2 {0}
+        run: |
+          mkdir build
+          set -ex
+
+          autoreconf -vfi
+          cd build
+
+          ../configure \
+            --prefix=/ \
+            --bindir=/ \
+            --sbindir=/ \
+            --docdir=/doc \
+            --mandir=/doc/man \
+            --host=${MINGW_CHOST} \
+            --build=${MINGW_CHOST} \
+            --enable-miniupnp \
+            --enable-natpmp \
+            --enable-pthread \
+            --with-zstd \
+            --with-openssl \
+            CFLAGS="${{ matrix.build_type.cflag }} -pipe" \
+            LDFLAGS="-Wl,--strip-all,--gc-sections,-s"
+
+          make -j8
+
+      - name: 安装+压缩
+        shell: msys2 {0}
+        run: |
+          set -ex
+          cd build
+
+          # 创建专用打包目录
+          _build_root="${PWD}"
+          mkdir -p pkgdir
+
+          # 获取分支名称 (示例：mingw-v3.12.10)
+          _branch_name=$(git rev-parse --abbrev-ref HEAD)
+
+          # 构建目录名称
+          _pkg_suffix="${{ matrix.msystem }}-${{ matrix.build_type.optimization }}"
+          pkgdir="pkgdir/n2n-${_branch_name}-${_pkg_suffix}"  # ← 修改路径
+
+
+          make -j8 install DESTDIR="${_build_root}/${pkgdir}"  # ← 修改安装路径
+
+          # 压缩
+          7z a -t7z -mx=9 n2n-${_branch_name}-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}.7z "${pkgdir}"
+
+      - name: 上传
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}
+          path: |
+            build/n2n-*-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}.7z
+      
+      - name: 加入依赖
+        if: always()
+        shell: msys2 {0}
+        run: |
+          cd build/pkgdir || (echo "build/pkgdir 目录不存在" && exit 1)
+          
+          # 核心依赖
+          cp -f ${MINGW_PREFIX}/bin/libwinpthread*.dll ./
+          cp -f ${MINGW_PREFIX}/bin/libzstd*.dll ./
+          cp -f ${MINGW_PREFIX}/bin/libssl*.dll ./
+          cp -f ${MINGW_PREFIX}/bin/libcrypto*.dll ./
+
+          # 打包
+          cd ..
+          7z a -t7z -mx=9 n2n-${_branch_name}-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}-deps.7z "${_pkgdir_pattern}"
+
+      - name: 上传带依赖的n2n
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}-deps
+          path: |
+            build/pkgdir/n2n-*-${{ matrix.msystem }}-${{ matrix.build_type.optimization }}-deps.7z
+
+          
