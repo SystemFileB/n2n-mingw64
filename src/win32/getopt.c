@@ -58,6 +58,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <string.h>
 #endif
@@ -221,7 +222,7 @@ static enum
 
 /* Value of POSIXLY_CORRECT environment variable.  */
 static char *posixly_correct;
-
+
 #ifdef	__GNU_LIBRARY__
 /* We want to avoid inclusion of string.h with non-GNU libraries
    because there are many ways it can cause trouble.
@@ -242,14 +243,12 @@ static char *posixly_correct;
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
 
-#ifndef getenv
-extern char *getenv ();
-#endif
+//#ifndef getenv
+//extern char *getenv ();
+//#endif
 
 static char *
-my_index (str, chr)
-     const char *str;
-     int chr;
+my_index (const char *str, int chr) // 现代参数声明
 {
   while (*str)
     {
@@ -337,8 +336,7 @@ static void exchange (char **);
 #endif
 
 static void
-exchange (argv)
-     char **argv;
+exchange (char **argv) // 现代参数声明
 {
   int bottom = first_nonopt;
   int middle = last_nonopt;
@@ -421,11 +419,7 @@ exchange (argv)
 #if defined __STDC__ && __STDC__
 static const char *_getopt_initialize (int, char *const *, const char *);
 #endif
-static const char *
-_getopt_initialize (argc, argv, optstring)
-     int argc;
-     char *const *argv;
-     const char *optstring;
+static const char *_getopt_initialize (int argc, char *const argv[], const char *optstring)
 {
   /* Start processing options with ARGV-element 1 (since ARGV-element 0
      is the program name); the sequence of previously skipped
@@ -435,7 +429,7 @@ _getopt_initialize (argc, argv, optstring)
 
   nextchar = NULL;
 
-  posixly_correct = getenv ("POSIXLY_CORRECT");
+  char *posixly_correct = getenv("POSIXLY_CORRECT");
 
   /* Determine how to handle the ordering of options and nonoptions.  */
 
@@ -486,7 +480,7 @@ _getopt_initialize (argc, argv, optstring)
 
   return optstring;
 }
-
+
 /* Scan elements of ARGV (whose length is ARGC) for option characters
    given in OPTSTRING.
 
@@ -544,13 +538,12 @@ _getopt_initialize (argc, argv, optstring)
    long-named options.  */
 
 int
-_getopt_internal (argc, argv, optstring, longopts, longind, long_only)
-     int argc;
-     char *const *argv;
-     const char *optstring;
-     const struct option *longopts;
-     int *longind;
-     int long_only;
+_getopt_internal (int argc,                 // 改为现代参数声明
+                  char *const *argv, 
+                  const char *optstring,
+                  const struct option *longopts, 
+                  int *longind,
+                  int long_only)
 {
   int print_errors = opterr;
   if (optstring[0] == ':')
@@ -1005,15 +998,12 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 }
 
 int
-getopt____ (argc, argv, optstring)
-     int argc;
-     char *const *argv;
-     const char *optstring;
+getopt____ (int argc, char *const *argv, const char *optstring) // 现代参数声明
 {
-  return _getopt_internal (argc, argv, optstring,
-			   (const struct option *) 0,
-			   (int *) 0,
-			   0);
+    return _getopt_internal (argc, argv, optstring,
+                            (const struct option *) 0,
+                            (int *) 0,
+                            0);
 }
 
 #endif	/* Not ELIDE_CODE.  */

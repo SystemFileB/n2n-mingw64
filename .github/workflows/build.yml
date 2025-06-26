@@ -75,6 +75,9 @@ jobs:
       - name: 编译
         shell: msys2 {0}
         run: |
+          export LANG=zh_CN.UTF-8
+          export LC_LANG=zh_CN.UTF-8
+
           mkdir build
           set -ex
 
@@ -99,6 +102,9 @@ jobs:
       - name: 安装+压缩
         shell: msys2 {0}
         run: |
+          export LANG=zh_CN.UTF-8
+          export LC_LANG=zh_CN.UTF-8
+
           set -ex
 
           # 创建专用打包目录
@@ -130,6 +136,9 @@ jobs:
         if: always()
         shell: msys2 {0}
         run: |
+          export LANG=zh_CN.UTF-8
+          export LC_LANG=zh_CN.UTF-8
+
           cd pkgdir || (echo "pkgdir 目录不存在" && exit 1)
           
           # 核心依赖
