@@ -60,7 +60,10 @@ jobs:
             ${{ matrix.prefix }}-toolchain
             ${{ matrix.prefix }}-zstd
             ${{ matrix.prefix }}-openssl
-            ${{ matrix.prefix }}-libpcap
+            ${{ matrix.prefix }}-miniupnpc
+            ${{ matrix.prefix }}-libnatpmp
+
+
 
       - name: 保存MSYS2包缓存
         if: steps.restore-msys2.outputs.cache-hit != 'true'
@@ -90,7 +93,6 @@ jobs:
             --enable-miniupnp \
             --enable-natpmp \
             --enable-pthread \
-            --enable-pcap \
             --with-zstd \
             --with-openssl \
             CFLAGS="${{ matrix.build_type.cflag }} -pipe" \
@@ -139,7 +141,8 @@ jobs:
           cp -f ${MINGW_PREFIX}/bin/libwinpthread*.dll ./
           cp -f ${MINGW_PREFIX}/bin/libzstd*.dll ./
           cp -f ${MINGW_PREFIX}/bin/libssl*.dll ./
-          cp -f ${MINGW_PREFIX}/bin/libpcap.dll ./
+          cp -f ${MINGW_PREFIX}/bin/libminiupnpc.dll ./
+          cp -f ${MINGW_PREFIX}/bin/libnatpmp.dll ./
           cp -f ${MINGW_PREFIX}/bin/libcrypto*.dll ./
 
           # 打包
